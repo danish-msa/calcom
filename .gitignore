@@ -98,6 +98,7 @@ apps/auth
 !.yarn/patches
 !.yarn/plugins
 !.yarn/releases
+!.yarn/releases/**
 !.yarn/sdks
 !.yarn/versions
 i18n.cache

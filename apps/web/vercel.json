@@ -1,4 +1,6 @@
 {
+  "installCommand": "cd ../.. && YARN_ENABLE_IMMUTABLE_INSTALLS=false node .yarn/releases/yarn-4.12.0.cjs install",
+  "buildCommand": "cd ../.. && node .yarn/releases/yarn-4.12.0.cjs run build",
   "crons": [
     {
       "path": "/api/cron/calendar-subscriptions",
