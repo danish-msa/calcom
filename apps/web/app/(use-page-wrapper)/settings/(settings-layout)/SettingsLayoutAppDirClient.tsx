@@ -660,6 +660,14 @@ const TeamListCollapsible = ({ teamFeatures }: { teamFeatures?: Record<number, T
                     className="px-2! me-5 h-7 w-auto"
                     disableChevron
                   />
+                  <VerticalTabItem
+                    name={t("subteams")}
+                    href={`/settings/teams/${team.id}/subteams`}
+                    trackingMetadata={{ section: "team", page: "subteams", teamId: team.id }}
+                    textClassNames="px-3 text-emphasis font-medium text-sm"
+                    className="px-2! me-5 h-7 w-auto"
+                    disableChevron
+                  />
                   {/* Show roles only for sub-teams with PBAC-enabled parent */}
                   <TeamRolesNavItem team={team} teamFeatures={teamFeatures} />
                   {(checkAdminOrOwner(team.role) ||

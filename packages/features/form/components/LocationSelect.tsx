@@ -23,7 +23,7 @@ export type LocationOption = {
   disabled?: boolean;
   address?: string;
   credentialId?: number;
-  teamName?: string;
+  teamName?: string | null;
   customClassNames?: LocationSelectCustomClassNames;
 };
 

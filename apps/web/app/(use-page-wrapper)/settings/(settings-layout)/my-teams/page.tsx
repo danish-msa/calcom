@@ -6,7 +6,6 @@ import type { PageProps as ServerPageProps } from "app/_types";
 import { _generateMetadata, getTranslate } from "app/_utils";
 import type { Metadata } from "next";
 import { cookies, headers } from "next/headers";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ServerTeamsListing } from "../../../(main-nav)/teams/server-page";
 import { MyTeamsCTA } from "./CTA";
@@ -30,8 +29,8 @@ const Page = async ({ searchParams: _searchParams }: ServerPageProps): Promise<J
     description = t("create_manage_teams_collaborative");
     CTA = (
       <div className="flex items-center gap-2">
-        <Button asChild color="secondary">
-          <Link href="/event-types">{t("schedule_meeting")}</Link>
+        <Button href="/event-types" color="secondary">
+          {t("schedule_meeting")}
         </Button>
         <MyTeamsCTA />
       </div>

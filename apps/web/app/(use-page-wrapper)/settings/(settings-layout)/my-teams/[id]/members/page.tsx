@@ -18,16 +18,7 @@ import { redirect } from "next/navigation";
 const fetchTeamRoles = async (
   teamId: number,
   organizationId?: number
-): Promise<
-  | Awaited<
-      ReturnType<
-        ReturnType<
-          Awaited<ReturnType<RoleManagementFactory["getInstance"]>>["createRoleManager"]
-        >["getTeamRoles"]
-      >
-    >
-  | []
-> => {
+): Promise<{ id: string; name: string }[]> => {
   if (!organizationId) return []; // Fallback to traditional roles
   try {
     const roleManager = await RoleManagementFactory.getInstance().createRoleManager(organizationId);
