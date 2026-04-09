@@ -5,7 +5,7 @@ import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Button } from "@calcom/ui/components/button";
 import posthog from "posthog-js";
 
-export const MyTeamsCTA = (): React.JSX.Element => {
+export const MyTeamsCTA = (): JSX.Element => {
   const { t } = useLocale();
   return (
     <Button

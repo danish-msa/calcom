@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "@calcom/platform-constants": "workspace:*",
-    "@calcom/platform-types": "workspace:*"
+    "@calcom/platform-types": "workspace:*",
+    "got": "^14.4.2"
   },
   "devDependencies": {
     "@types/jest": "29.5.12",
