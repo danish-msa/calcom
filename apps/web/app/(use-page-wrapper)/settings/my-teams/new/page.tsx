@@ -5,7 +5,7 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { CreateNewTeamView, LayoutWrapper } from "~/settings/teams/new/create-new-team-view";
 
-const ServerPage = async (): Promise<React.JSX.Element> => {
+const ServerPage = async (): Promise<JSX.Element> => {
   const session = await getServerSession({ req: buildLegacyRequest(await headers(), await cookies()) });
 
   if (!session?.user?.id) {

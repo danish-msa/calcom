@@ -11,7 +11,7 @@ import { redirect } from "next/navigation";
 import { ServerTeamsListing } from "../../../(main-nav)/teams/server-page";
 import { MyTeamsCTA } from "./CTA";
 
-const Page = async ({ searchParams: _searchParams }: ServerPageProps): Promise<React.JSX.Element> => {
+const Page = async ({ searchParams: _searchParams }: ServerPageProps): Promise<JSX.Element> => {
   const t = await getTranslate();
   const session = await getServerSession({ req: buildLegacyRequest(await headers(), await cookies()) });
   const searchParams = await _searchParams;

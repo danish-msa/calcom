@@ -3,7 +3,7 @@ import TeamSettingsView from "@calcom/web/modules/ee/teams/views/team-settings-v
 import { _generateMetadata, getTranslate } from "app/_utils";
 import type { Metadata } from "next";
 
-const Page = async (): Promise<React.JSX.Element> => {
+const Page = async (): Promise<JSX.Element> => {
   const t = await getTranslate();
   return (
     <SettingsHeader

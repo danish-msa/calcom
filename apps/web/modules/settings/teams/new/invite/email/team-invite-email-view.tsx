@@ -30,7 +30,7 @@ type FormValues = {
   }[];
 };
 
-export const TeamInviteEmailView = ({ userEmail }: TeamInviteEmailViewProps): React.JSX.Element => {
+export const TeamInviteEmailView = ({ userEmail }: TeamInviteEmailViewProps): JSX.Element => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();

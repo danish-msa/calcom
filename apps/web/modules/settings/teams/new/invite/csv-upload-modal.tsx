@@ -42,7 +42,7 @@ type CSVUploadModalProps = {
   onClose: () => void;
 };
 
-export const CSVUploadModal = ({ isOpen, onClose }: CSVUploadModalProps): React.JSX.Element => {
+export const CSVUploadModal = ({ isOpen, onClose }: CSVUploadModalProps): JSX.Element => {
   const { t } = useLocale();
   const router = useRouter();
   const pathname = usePathname();

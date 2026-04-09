@@ -3,7 +3,7 @@ import { _generateMetadata, getTranslate } from "app/_utils";
 import type { Metadata } from "next";
 import LegacyPage from "~/ee/teams/views/team-appearance-view";
 
-const Page = async (): Promise<React.JSX.Element> => {
+const Page = async (): Promise<JSX.Element> => {
   const t = await getTranslate();
 
   return (

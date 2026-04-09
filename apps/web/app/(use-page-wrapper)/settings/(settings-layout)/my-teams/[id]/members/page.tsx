@@ -61,7 +61,7 @@ const getCachedTeamAttributes: typeof fetchTeamAttributes = unstable_cache(fetch
   tags: ["viewer.attributes.list"],
 });
 
-const Page = async ({ params }: { params: Promise<{ id: string }> }): Promise<React.JSX.Element> => {
+const Page = async ({ params }: { params: Promise<{ id: string }> }): Promise<JSX.Element> => {
   const t = await getTranslate();
   const { id } = await params;
   const teamId = parseInt(id, 10);

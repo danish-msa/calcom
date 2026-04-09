@@ -7,7 +7,7 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { TeamInviteView } from "~/settings/teams/new/invite/team-invite-view";
 
-const ServerPage = async (): Promise<React.JSX.Element> => {
+const ServerPage = async (): Promise<JSX.Element> => {
   const session = await getServerSession({ req: buildLegacyRequest(await headers(), await cookies()) });
 
   if (!session?.user?.id) {

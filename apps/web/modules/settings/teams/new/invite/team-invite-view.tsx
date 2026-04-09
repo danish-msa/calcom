@@ -18,7 +18,7 @@ type TeamInviteViewProps = {
   userEmail: string;
 };
 
-export const TeamInviteView = ({ userEmail }: TeamInviteViewProps): React.JSX.Element => {
+export const TeamInviteView = ({ userEmail }: TeamInviteViewProps): JSX.Element => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
