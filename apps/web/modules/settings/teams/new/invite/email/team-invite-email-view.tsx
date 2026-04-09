@@ -7,7 +7,7 @@ import { Form } from "@calcom/ui/components/form";
 import { showToast } from "@calcom/ui/components/toast";
 import { revalidateTeamsList } from "@calcom/web/app/(use-page-wrapper)/(main-nav)/teams/actions";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -30,18 +30,27 @@ type FormValues = {
   }[];
 };
 
-export const TeamInviteEmailView = ({ userEmail }: TeamInviteEmailViewProps) => {
+export const TeamInviteEmailView = ({ userEmail }: TeamInviteEmailViewProps): React.JSX.Element => {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const { t, i18n } = useLocale();
   const utils = trpc.useUtils();
+
+  const isMyTeamsFlow = pathname?.startsWith("/settings/my-teams/new") ?? false;
+  let redirectBasePath = "/settings/teams/new";
+  let afterFlowPath = "/teams";
+  if (isMyTeamsFlow) {
+    redirectBasePath = "/settings/my-teams/new";
+    afterFlowPath = "/settings/my-teams";
+  }
 
   const store = useOnboardingStore();
   const { teamInvites, setTeamInvites, teamDetails, setTeamId, teamId, resetOnboardingPreservingPlan } =
     store;
   const [inviteRole, setInviteRole] = React.useState<InviteRole>("MEMBER");
   const { inviteMembers, isSubmitting } = useCreateTeam({
-    redirectBasePath: "/settings/teams/new",
+    redirectBasePath,
     skipRedirectAfterInvite: true,
     isOnboarding: false,
   });
@@ -51,7 +60,7 @@ export const TeamInviteEmailView = ({ userEmail }: TeamInviteEmailViewProps) => 
     const teamIdParam = searchParams?.get("teamId");
     if (teamIdParam && !teamId) {
       const parsedTeamId = parseInt(teamIdParam, 10);
-      if (!isNaN(parsedTeamId)) {
+      if (!Number.isNaN(parsedTeamId)) {
         setTeamId(parsedTeamId);
       }
     }
@@ -66,13 +75,15 @@ export const TeamInviteEmailView = ({ userEmail }: TeamInviteEmailViewProps) => 
     ),
   });
 
+  let defaultInvites: FormValues["invites"] = [{ email: "", role: inviteRole }];
+  if (teamInvites.length > 0) {
+    defaultInvites = teamInvites.map((inv) => ({ email: inv.email, role: inv.role }));
+  }
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      invites:
-        teamInvites.length > 0
-          ? teamInvites.map((inv) => ({ email: inv.email, role: inv.role }))
-          : [{ email: "", role: inviteRole }],
+      invites: defaultInvites,
     },
   });
 
@@ -81,9 +92,12 @@ export const TeamInviteEmailView = ({ userEmail }: TeamInviteEmailViewProps) => 
     name: "invites",
   });
 
-  const handleContinue = async (data: FormValues) => {
+  const handleContinue = async (data: FormValues): Promise<void> => {
     const teamIdParam = searchParams?.get("teamId");
-    const parsedTeamId = !teamId ? parseInt(teamIdParam || "", 10) : teamId;
+    let parsedTeamId = teamId;
+    if (!parsedTeamId) {
+      parsedTeamId = parseInt(teamIdParam || "", 10);
+    }
     if (!parsedTeamId) {
       console.log("Team ID is missing. Please go back and create your team first.");
       showToast(
@@ -117,10 +131,12 @@ export const TeamInviteEmailView = ({ userEmail }: TeamInviteEmailViewProps) => 
         await revalidateTeamsList();
         await utils.viewer.teams.list.invalidate();
         resetOnboardingPreservingPlan();
-        router.replace("/teams");
+        router.replace(afterFlowPath);
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : t("something_went_wrong") || "Something went wrong";
+        let errorMessage = t("something_went_wrong") || "Something went wrong";
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        }
         showToast(errorMessage, "error");
       }
     } else {
@@ -128,16 +144,16 @@ export const TeamInviteEmailView = ({ userEmail }: TeamInviteEmailViewProps) => 
       await revalidateTeamsList();
       await utils.viewer.teams.list.invalidate();
       resetOnboardingPreservingPlan();
-      router.replace("/teams");
+      router.replace(afterFlowPath);
     }
   };
 
-  const handleSkip = async () => {
+  const handleSkip = async (): Promise<void> => {
     setTeamInvites([]);
     await revalidateTeamsList();
     await utils.viewer.teams.list.invalidate();
     resetOnboardingPreservingPlan();
-    router.replace("/teams");
+    router.replace(afterFlowPath);
   };
 
   // Watch form values to pass to browser view for real-time updates
@@ -190,7 +206,7 @@ export const TeamInviteEmailView = ({ userEmail }: TeamInviteEmailViewProps) => 
 
                 <RoleSelector
                   value={inviteRole}
-                  onValueChange={(value) => {
+                  onValueChange={(value: InviteRole): void => {
                     setInviteRole(value);
                     fields.forEach((_, index) => {
                       form.setValue(`invites.${index}.role`, value);

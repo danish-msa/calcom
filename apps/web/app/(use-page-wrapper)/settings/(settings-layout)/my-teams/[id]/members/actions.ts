@@ -1,26 +1,37 @@
 "use server";
 
 import { randomBytes } from "node:crypto";
-
 import { getServerSession } from "@calcom/features/auth/lib/getServerSession";
 import { prisma } from "@calcom/prisma";
 import { MembershipRole } from "@calcom/prisma/enums";
 import { buildLegacyRequest } from "@lib/buildLegacyCtx";
-import { cookies, headers } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { cookies, headers } from "next/headers";
 
-function assertAuthedUserId(userId: number | undefined | null): asserts userId is number {
-  if (!userId) {
+function numericSessionUserId(session: NonNullable<Awaited<ReturnType<typeof getServerSession>>>): number {
+  const raw = session.user.id;
+  let n: number;
+  if (typeof raw === "string") {
+    n = parseInt(raw, 10);
+  } else {
+    n = Number(raw);
+  }
+  if (!Number.isFinite(n) || n < 1) {
     throw new Error("UNAUTHORIZED");
   }
+  return n;
 }
 
-async function assertTeamAdminOrOwner(teamId: number) {
+async function assertTeamAdminOrOwner(teamId: number): Promise<{ userId: number }> {
   const session = await getServerSession({ req: buildLegacyRequest(await headers(), await cookies()) });
-  assertAuthedUserId(session?.user?.id);
+  if (!session?.user?.id) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  const userId = numericSessionUserId(session);
 
   const membership = await prisma.membership.findUnique({
-    where: { userId_teamId: { userId: session.user.id, teamId } },
+    where: { userId_teamId: { userId, teamId } },
     select: { role: true, accepted: true },
   });
 
@@ -29,10 +40,10 @@ async function assertTeamAdminOrOwner(teamId: number) {
     throw new Error("FORBIDDEN");
   }
 
-  return { userId: session.user.id };
+  return { userId };
 }
 
-export async function createOrRotateTeamInviteLink(formData: FormData) {
+export async function createOrRotateTeamInviteLink(formData: FormData): Promise<void> {
   const teamId = Number(formData.get("teamId"));
   if (!Number.isFinite(teamId)) throw new Error("BAD_REQUEST");
 
@@ -61,7 +72,7 @@ export async function createOrRotateTeamInviteLink(formData: FormData) {
   revalidatePath(`/settings/my-teams/${teamId}/members`);
 }
 
-export async function removeTeamMember(formData: FormData) {
+export async function removeTeamMember(formData: FormData): Promise<void> {
   const teamId = Number(formData.get("teamId"));
   const memberUserId = Number(formData.get("memberUserId"));
   if (!Number.isFinite(teamId) || !Number.isFinite(memberUserId)) throw new Error("BAD_REQUEST");
@@ -76,7 +87,7 @@ export async function removeTeamMember(formData: FormData) {
   revalidatePath(`/settings/my-teams/${teamId}/members`);
 }
 
-export async function changeTeamMemberRole(formData: FormData) {
+export async function changeTeamMemberRole(formData: FormData): Promise<void> {
   const teamId = Number(formData.get("teamId"));
   const memberUserId = Number(formData.get("memberUserId"));
   const roleRaw = String(formData.get("role") || "");
@@ -96,4 +107,3 @@ export async function changeTeamMemberRole(formData: FormData) {
 
   revalidatePath(`/settings/my-teams/${teamId}/members`);
 }
-

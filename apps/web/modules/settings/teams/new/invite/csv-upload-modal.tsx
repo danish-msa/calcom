@@ -1,16 +1,15 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
-import React, { useRef, useState } from "react";
-
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Button } from "@calcom/ui/components/button";
 import { Dialog, DialogContent } from "@calcom/ui/components/dialog";
 import { Icon } from "@calcom/ui/components/icon";
 import { Logo } from "@calcom/ui/components/logo";
 import { showToast } from "@calcom/ui/components/toast";
-
-import { useOnboardingStore, type Invite } from "~/onboarding/store/onboarding-store";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import type React from "react";
+import { useRef, useState } from "react";
+import { type Invite, useOnboardingStore } from "~/onboarding/store/onboarding-store";
 
 /**
  * Parse a CSV line handling quoted fields that may contain commas.
@@ -43,9 +42,10 @@ type CSVUploadModalProps = {
   onClose: () => void;
 };
 
-export const CSVUploadModal = ({ isOpen, onClose }: CSVUploadModalProps) => {
+export const CSVUploadModal = ({ isOpen, onClose }: CSVUploadModalProps): React.JSX.Element => {
   const { t } = useLocale();
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const store = useOnboardingStore();
   const { setTeamInvites, teamDetails, teamId } = store;
@@ -53,7 +53,17 @@ export const CSVUploadModal = ({ isOpen, onClose }: CSVUploadModalProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  let primaryButtonStartIcon: "upload" | "file-text" = "upload";
+  if (selectedFile) {
+    primaryButtonStartIcon = "file-text";
+  }
+
+  let selectedFileLabel = t("upload_csv_description");
+  if (selectedFile) {
+    selectedFileLabel = selectedFile.name;
+  }
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>): void => {
     const file = event.target.files?.[0];
     if (file) {
       if (!file.name.endsWith(".csv")) {
@@ -64,7 +74,7 @@ export const CSVUploadModal = ({ isOpen, onClose }: CSVUploadModalProps) => {
     }
   };
 
-  const handleDownloadTemplate = () => {
+  const handleDownloadTemplate = (): void => {
     const headers = ["email", "role"];
     const exampleRow = ["example@email.com", "MEMBER"];
     const csvContent = [headers.join(","), exampleRow.join(",")].join("\n");
@@ -82,7 +92,7 @@ export const CSVUploadModal = ({ isOpen, onClose }: CSVUploadModalProps) => {
     showToast(t("template_downloaded"), "success");
   };
 
-  const handleUpload = async () => {
+  const handleUpload = async (): Promise<void> => {
     if (!selectedFile) {
       showToast(t("please_select_file"), "error");
       return;
@@ -114,11 +124,13 @@ export const CSVUploadModal = ({ isOpen, onClose }: CSVUploadModalProps) => {
         .slice(1)
         .map((line) => {
           const values = parseCSVLine(line);
+          let role = "MEMBER";
+          if (roleIndex !== -1) {
+            role = values[roleIndex]?.trim().toUpperCase() || "MEMBER";
+          }
           return {
             email: values[emailIndex]?.trim(),
-            role: (roleIndex !== -1 ? values[roleIndex]?.trim().toUpperCase() : "MEMBER") as
-              | "MEMBER"
-              | "ADMIN",
+            role: role as "MEMBER" | "ADMIN",
           };
         })
         .filter((invite) => invite.email && invite.email.length > 0);
@@ -129,20 +141,32 @@ export const CSVUploadModal = ({ isOpen, onClose }: CSVUploadModalProps) => {
         return;
       }
 
-      const invites: Invite[] = parsedInvites.map((invite) => ({
-        email: invite.email,
-        team: teamDetails.name,
-        role: invite.role === "ADMIN" ? "ADMIN" : "MEMBER",
-      }));
+      const invites: Invite[] = parsedInvites.map((invite) => {
+        let role: "MEMBER" | "ADMIN" = "MEMBER";
+        if (invite.role === "ADMIN") {
+          role = "ADMIN";
+        }
+        return {
+          email: invite.email,
+          team: teamDetails.name,
+          role,
+        };
+      });
 
       setTeamInvites(invites);
 
       showToast(t("csv_uploaded_successfully", { count: invites.length }), "success");
       onClose();
 
-      // Navigate to email page to display the invites - use settings path
+      const isMyTeamsFlow = pathname?.startsWith("/settings/my-teams/new") ?? false;
+      let redirectBasePath = "/settings/teams/new";
+      if (isMyTeamsFlow) {
+        redirectBasePath = "/settings/my-teams/new";
+      }
+
+      // Navigate to email page to display the invites
       const teamIdParam = searchParams?.get("teamId") || teamId;
-      router.push(`/settings/teams/new/invite/email?teamId=${teamIdParam}`);
+      router.push(`${redirectBasePath}/invite/email?teamId=${teamIdParam}`);
     } catch (error) {
       console.error("Error uploading CSV:", error);
       showToast(t("error_uploading_csv"), "error");
@@ -151,7 +175,7 @@ export const CSVUploadModal = ({ isOpen, onClose }: CSVUploadModalProps) => {
     }
   };
 
-  const handleClose = () => {
+  const handleClose = (): void => {
     setSelectedFile(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -173,7 +197,7 @@ export const CSVUploadModal = ({ isOpen, onClose }: CSVUploadModalProps) => {
             <div
               className="from-default to-muted border-subtle flex items-center justify-center rounded-2xl border bg-gradient-to-br p-8 shadow-sm"
               style={{ width: 200, height: 150 }}>
-              {selectedFile ? (
+              {selectedFile && (
                 <div className="flex flex-col items-center gap-3">
                   <div className="from-default to-muted border-subtle flex items-center justify-center rounded-full border bg-gradient-to-b p-4 shadow-sm">
                     <Icon name="file-text" className="text-emphasis" style={{ width: 32, height: 32 }} />
@@ -183,7 +207,8 @@ export const CSVUploadModal = ({ isOpen, onClose }: CSVUploadModalProps) => {
                     <p className="text-subtle text-xs">{(selectedFile.size / 1024).toFixed(2)} KB</p>
                   </div>
                 </div>
-              ) : (
+              )}
+              {!selectedFile && (
                 <div className="flex flex-col items-center gap-3">
                   <div className="from-default to-muted border-subtle flex items-center justify-center rounded-full border bg-gradient-to-b p-4 shadow-sm">
                     <Icon
@@ -223,9 +248,7 @@ export const CSVUploadModal = ({ isOpen, onClose }: CSVUploadModalProps) => {
               </div>
               <div className="flex-1">
                 <p className="text-emphasis text-sm font-medium">{t("upload_your_file")}</p>
-                <p className="text-subtle text-xs">
-                  {selectedFile ? selectedFile.name : t("upload_csv_description")}
-                </p>
+                <p className="text-subtle text-xs">{selectedFileLabel}</p>
               </div>
               <input
                 ref={fileInputRef}
@@ -236,7 +259,7 @@ export const CSVUploadModal = ({ isOpen, onClose }: CSVUploadModalProps) => {
               />
               <Button
                 color="secondary"
-                StartIcon={selectedFile ? "file-text" : "upload"}
+                StartIcon={primaryButtonStartIcon}
                 size="sm"
                 onClick={() => fileInputRef.current?.click()}>
                 {t("choose_file")}

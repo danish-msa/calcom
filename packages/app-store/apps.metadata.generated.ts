@@ -23,6 +23,7 @@ import databuddy_config_json from "./databuddy/config.json";
 import deel_config_json from "./deel/config.json";
 import demodesk_config_json from "./demodesk/config.json";
 import dialpad_config_json from "./dialpad/config.json";
+import dialpadvideo_config_json from "./dialpadvideo/config.json";
 import discord_config_json from "./discord/config.json";
 import dub_config_json from "./dub/config.json";
 import eightxeight_config_json from "./eightxeight/config.json";
@@ -135,6 +136,7 @@ export const appStoreMetadata = {
   deel: deel_config_json,
   demodesk: demodesk_config_json,
   dialpad: dialpad_config_json,
+  dialpadvideo: dialpadvideo_config_json,
   discord: discord_config_json,
   dub: dub_config_json,
   eightxeight: eightxeight_config_json,

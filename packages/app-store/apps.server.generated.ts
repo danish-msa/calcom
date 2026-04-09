@@ -14,6 +14,7 @@ export const apiHandlers = {
   databuddy: import("./databuddy/api"),
   demodesk: import("./demodesk/api"),
   dialpad: import("./dialpad/api"),
+  dialpadvideo: import("./dialpadvideo/api"),
   discord: import("./discord/api"),
   dub: import("./dub/api"),
   eightxeight: import("./eightxeight/api"),

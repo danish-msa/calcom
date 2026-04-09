@@ -1,36 +1,42 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
-import posthog from "posthog-js";
-import React, { useEffect } from "react";
-
-import { useFlags } from "@calcom/web/modules/feature-flags/hooks/useFlags";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Button } from "@calcom/ui/components/button";
-
+import { useFlags } from "@calcom/web/modules/feature-flags/hooks/useFlags";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import posthog from "posthog-js";
+import React, { useEffect } from "react";
 import { InviteOptions } from "~/onboarding/components/InviteOptions";
 import { OnboardingCard } from "~/onboarding/components/OnboardingCard";
 import { OnboardingLayout } from "~/onboarding/components/OnboardingLayout";
 import { OnboardingInviteBrowserView } from "~/onboarding/components/onboarding-invite-browser-view";
 import { useCreateTeam } from "~/onboarding/hooks/useCreateTeam";
 import { useOnboardingStore } from "~/onboarding/store/onboarding-store";
-
 import { CSVUploadModal } from "./csv-upload-modal";
 
 type TeamInviteViewProps = {
   userEmail: string;
 };
 
-export const TeamInviteView = ({ userEmail }: TeamInviteViewProps) => {
+export const TeamInviteView = ({ userEmail }: TeamInviteViewProps): React.JSX.Element => {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const { t } = useLocale();
   const flags = useFlags();
 
+  const isMyTeamsFlow = pathname?.startsWith("/settings/my-teams/new") ?? false;
+  let redirectBasePath = "/settings/teams/new";
+  let afterFlowPath = "/teams";
+  if (isMyTeamsFlow) {
+    redirectBasePath = "/settings/my-teams/new";
+    afterFlowPath = "/settings/my-teams";
+  }
+
   const store = useOnboardingStore();
   const { setTeamInvites, teamDetails, setTeamId, teamId, resetOnboardingPreservingPlan } = store;
   const { isSubmitting } = useCreateTeam({
-    redirectBasePath: "/settings/teams/new",
+    redirectBasePath,
     isOnboarding: false,
   });
   const [isCSVModalOpen, setIsCSVModalOpen] = React.useState(false);
@@ -40,7 +46,7 @@ export const TeamInviteView = ({ userEmail }: TeamInviteViewProps) => {
     const teamIdParam = searchParams?.get("teamId");
     if (teamIdParam) {
       const parsedTeamId = parseInt(teamIdParam, 10);
-      if (!isNaN(parsedTeamId)) {
+      if (!Number.isNaN(parsedTeamId)) {
         setTeamId(parsedTeamId);
       }
     }
@@ -48,36 +54,40 @@ export const TeamInviteView = ({ userEmail }: TeamInviteViewProps) => {
 
   const googleWorkspaceEnabled = flags["google-workspace-directory"];
 
-  const handleGoogleWorkspaceConnect = () => {
+  const handleGoogleWorkspaceConnect = (): void => {
     // TODO: Implement Google Workspace connection
     console.log("Connect Google Workspace");
   };
 
-  const handleInviteViaEmail = () => {
-    router.push(`/settings/teams/new/invite/email?teamId=${teamId}`);
+  const handleInviteViaEmail = (): void => {
+    router.push(`${redirectBasePath}/invite/email?teamId=${teamId}`);
   };
 
-  const handleUploadCSV = () => {
+  const handleUploadCSV = (): void => {
     setIsCSVModalOpen(true);
   };
 
-  const handleCopyInviteLink = () => {
+  const handleCopyInviteLink = (): void => {
     // Disabled for now as per requirements
     console.log("Copy invite link - disabled");
   };
 
-  const handleSkip = async () => {
+  const handleSkip = async (): Promise<void> => {
     posthog.capture("settings_team_invite_skip_clicked");
     setTeamInvites([]);
     resetOnboardingPreservingPlan();
-    // Redirect to teams page after skipping
-    router.push("/teams");
+    router.push(afterFlowPath);
   };
 
-  const handleBack = () => {
+  const handleBack = (): void => {
     posthog.capture("settings_team_invite_back_clicked");
-    router.push("/settings/teams/new");
+    router.push(redirectBasePath);
   };
+
+  let onConnectGoogleWorkspace: undefined | (() => void);
+  if (googleWorkspaceEnabled) {
+    onConnectGoogleWorkspace = handleGoogleWorkspaceConnect;
+  }
 
   return (
     <>
@@ -111,7 +121,7 @@ export const TeamInviteView = ({ userEmail }: TeamInviteViewProps) => {
               onInviteViaEmail={handleInviteViaEmail}
               onUploadCSV={handleUploadCSV}
               onCopyInviteLink={handleCopyInviteLink}
-              onConnectGoogleWorkspace={googleWorkspaceEnabled ? handleGoogleWorkspaceConnect : undefined}
+              onConnectGoogleWorkspace={onConnectGoogleWorkspace}
               isSubmitting={isSubmitting}
             />
           </OnboardingCard>

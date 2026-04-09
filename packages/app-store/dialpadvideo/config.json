@@ -1,0 +1,23 @@
+{
+  "name": "Dialpad Meetings",
+  "slug": "dialpad-meetings",
+  "dirName": "dialpadvideo",
+  "type": "dialpad_video",
+  "variant": "conferencing",
+  "logo": "icon.svg",
+  "url": "https://developers.dialpad.com/docs/welcome",
+  "categories": ["conferencing"],
+  "publisher": "Dialpad (custom)",
+  "email": "support@dialpad.com",
+  "isGlobal": true,
+  "appData": {
+    "location": {
+      "type": "integrations:dialpad-meetings",
+      "label": "Dialpad Meetings",
+      "linkType": "dynamic"
+    }
+  },
+  "concurrentMeetings": true,
+  "description": "Automatically create a Dialpad meeting link for each booking.",
+  "isAuth": false
+}

@@ -2,6 +2,8 @@ import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
 import { CheckIcon } from "@coss/ui/icons";
 
+const isHttpUrl = (value: string): boolean => /^https?:\/\//.test(value);
+
 export interface BookingSuccessCardProps {
   title: string;
   formattedDate: string;
@@ -26,8 +28,16 @@ export function BookingSuccessCard({
   attendeeName,
   attendeeEmail,
   location,
-}: BookingSuccessCardProps) {
+}: BookingSuccessCardProps): JSX.Element {
   const { t } = useLocale();
+  let whereLabel: string | null = null;
+  if (location) {
+    if (isHttpUrl(location)) {
+      whereLabel = location;
+    } else {
+      whereLabel = t("web_conferencing_details_to_follow");
+    }
+  }
 
   return (
     <div className="h-screen">
@@ -96,10 +106,10 @@ export function BookingSuccessCard({
                       )}
                     </div>
 
-                    {location && (
+                    {whereLabel && (
                       <>
                         <div className="mt-3 font-medium">{t("where")}</div>
-                        <div className="col-span-2 mt-3">{t("web_conferencing_details_to_follow")}</div>
+                        <div className="col-span-2 mt-3 break-words">{whereLabel}</div>
                       </>
                     )}
                   </div>

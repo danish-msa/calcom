@@ -223,7 +223,7 @@ const getTabs = (orgBranding: OrganizationBranding | null) => {
     },
     {
       name: "teams",
-      href: "/teams",
+      href: "/settings/my-teams",
       icon: "users",
       children: [],
     },

@@ -1,9 +1,10 @@
+import process from "node:process";
+import i18nConfig from "@calcom/i18n/next-i18next.config";
 import { withBotId } from "botid/next/config";
 import { config as dotenvConfig } from "dotenv";
 import type { NextConfig } from "next";
 import type { RouteHas } from "next/dist/lib/load-custom-routes";
 import { withAxiom } from "next-axiom";
-import i18nConfig from "@calcom/i18n/next-i18next.config";
 import packageJson from "./package.json";
 import {
   nextJsOrgRewriteConfig,
@@ -336,6 +337,10 @@ const nextConfig = (phase: string): NextConfig => {
           destination: "/apps/routing-forms/:path*",
         },
         {
+          source: "/my-teams/:path*",
+          destination: "/settings/my-teams/:path*",
+        },
+        {
           source: "/org/:slug",
           destination: "/team/:slug",
         },
@@ -541,8 +546,78 @@ const nextConfig = (phase: string): NextConfig => {
           permanent: true,
         },
         {
+          source: "/settings/schedule",
+          destination: "/event-types",
+          permanent: false,
+        },
+        {
           source: "/settings/teams",
-          destination: "/teams",
+          destination: "/settings/my-teams",
+          permanent: true,
+        },
+        {
+          source: "/settings/my-teams",
+          destination: "/my-teams",
+          permanent: true,
+        },
+        {
+          source: "/settings/my-teams/:path*",
+          destination: "/my-teams/:path*",
+          permanent: true,
+        },
+        {
+          source: "/teams",
+          destination: "/settings/my-teams",
+          permanent: true,
+        },
+        {
+          source: "/settings/teams/new",
+          destination: "/settings/my-teams/new",
+          permanent: true,
+        },
+        {
+          source: "/settings/teams/new/invite",
+          destination: "/settings/my-teams/new/invite",
+          permanent: true,
+        },
+        {
+          source: "/settings/teams/new/invite/email",
+          destination: "/settings/my-teams/new/invite/email",
+          permanent: true,
+        },
+        {
+          source: "/settings/teams/:id/profile",
+          destination: "/settings/my-teams/:id/profile",
+          permanent: true,
+        },
+        {
+          source: "/settings/teams/:id/members",
+          destination: "/settings/my-teams/:id/members",
+          permanent: true,
+        },
+        {
+          source: "/settings/teams/:id/appearance",
+          destination: "/settings/my-teams/:id/appearance",
+          permanent: true,
+        },
+        {
+          source: "/settings/teams/:id/features",
+          destination: "/settings/my-teams/:id/features",
+          permanent: true,
+        },
+        {
+          source: "/settings/teams/:id/billing",
+          destination: "/settings/my-teams/:id/billing",
+          permanent: true,
+        },
+        {
+          source: "/settings/teams/:id/roles",
+          destination: "/settings/my-teams/:id/roles",
+          permanent: true,
+        },
+        {
+          source: "/settings/teams/:id/settings",
+          destination: "/settings/my-teams/:id/settings",
           permanent: true,
         },
         {

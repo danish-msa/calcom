@@ -51,7 +51,7 @@ const getNavigationItems = (
     : []),
   {
     name: "teams",
-    href: "/teams",
+    href: "/settings/my-teams",
     icon: "users",
     badge: <TeamInviteBadge />,
     moreOnMobile: true,

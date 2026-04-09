@@ -1,14 +1,12 @@
-import { cloneDeep, merge } from "lodash";
-import { v5 as uuidv5 } from "uuid";
-import type { z } from "zod";
-
+import process from "node:process";
 import { getCalendar } from "@calcom/app-store/_utils/getCalendar";
 import { FAKE_DAILY_CREDENTIAL } from "@calcom/app-store/dailyvideo/lib/VideoApiAdapter";
 import { appKeysSchema as calVideoKeysSchema } from "@calcom/app-store/dailyvideo/zod";
+import { FAKE_DIALPAD_CREDENTIAL } from "@calcom/app-store/dialpadvideo/lib/VideoApiAdapter";
 import { getLocationFromApp, MeetLocationType, MSTeamsLocationType } from "@calcom/app-store/locations";
 import getApps from "@calcom/app-store/utils";
-import { createEvent, updateEvent, deleteEvent } from "@calcom/features/calendars/lib/CalendarManager";
-import { createMeeting, updateMeeting, deleteMeeting } from "@calcom/features/conferencing/lib/videoClient";
+import { createEvent, deleteEvent, updateEvent } from "@calcom/features/calendars/lib/CalendarManager";
+import { createMeeting, deleteMeeting, updateMeeting } from "@calcom/features/conferencing/lib/videoClient";
 import { CredentialRepository } from "@calcom/features/credentials/repositories/CredentialRepository";
 import CrmManager from "@calcom/features/crmManager/crmManager";
 import CRMScheduler from "@calcom/features/crmManager/crmScheduler";
@@ -18,14 +16,14 @@ import { symmetricDecrypt } from "@calcom/lib/crypto";
 import { isDelegationCredential } from "@calcom/lib/delegationCredential";
 import logger from "@calcom/lib/logger";
 import {
+  getPiiFreeCalendarEvent,
+  getPiiFreeCredential,
   getPiiFreeDestinationCalendar,
   getPiiFreeUser,
-  getPiiFreeCredential,
-  getPiiFreeCalendarEvent,
 } from "@calcom/lib/piiFreeData";
 import { safeStringify } from "@calcom/lib/safeStringify";
 import { prisma } from "@calcom/prisma";
-import type { DestinationCalendar, BookingReference } from "@calcom/prisma/client";
+import type { BookingReference, DestinationCalendar } from "@calcom/prisma/client";
 import { createdEventSchema } from "@calcom/prisma/zod-utils";
 import type { AdditionalInformation, CalendarEvent, NewCalendarEventType } from "@calcom/types/Calendar";
 import type { CredentialForCalendarService } from "@calcom/types/Credential";
@@ -36,10 +34,14 @@ import type {
   PartialBooking,
   PartialReference,
 } from "@calcom/types/EventManager";
+import { cloneDeep, merge } from "lodash";
+import { v5 as uuidv5 } from "uuid";
+import type { z } from "zod";
 
 const log = logger.getSubLogger({ prefix: ["EventManager"] });
 const CALENDSO_ENCRYPTION_KEY = process.env.CALENDSO_ENCRYPTION_KEY || "";
 const CALDAV_CALENDAR_TYPE = "caldav_calendar";
+const DIALPAD_MEETINGS_LOCATION_TYPE = "integrations:dialpad-meetings";
 export const isDedicatedIntegration = (location: string): boolean => {
   return location !== MeetLocationType && location.includes("integrations:");
 };
@@ -1038,6 +1040,12 @@ export default class EventManager {
       return undefined;
     }
 
+    // Dialpad Meetings is configured as a global dynamic location. It uses the server `DIALPAD_API_KEY`
+    // and should not require per-user/per-team credentials.
+    if (event.location === DIALPAD_MEETINGS_LOCATION_TYPE) {
+      return { ...FAKE_DIALPAD_CREDENTIAL };
+    }
+
     /** @fixme potential bug since Google Meet are saved as `integrations:google:meet` and there are no `google:meet` type in our DB */
     const integrationName = event.location.replace("integrations:", "");
     let videoCredential;
@@ -1102,8 +1110,7 @@ export default class EventManager {
     booking: PartialBooking,
     newBookingId?: number
   ): Promise<Array<EventResult<NewCalendarEventType>>> {
-    let calendarReference: PartialReference[] | undefined = undefined,
-      credential;
+    let calendarReference: PartialReference[] | undefined, credential;
     log.silly("updateAllCalendarEvents", JSON.stringify({ event, booking, newBookingId }));
     try {
       // If a newBookingId is given, update that calendar event

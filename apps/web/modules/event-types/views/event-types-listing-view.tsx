@@ -34,7 +34,6 @@ import {
 } from "@calcom/ui/components/dropdown";
 import { EmptyScreen } from "@calcom/ui/components/empty-screen";
 import { Label, Switch, TextField } from "@calcom/ui/components/form";
-import { SearchIcon } from "@coss/ui/icons";
 import { HorizontalTabs } from "@calcom/ui/components/navigation";
 import { Skeleton } from "@calcom/ui/components/skeleton";
 import { showToast } from "@calcom/ui/components/toast";
@@ -51,6 +50,7 @@ import {
 } from "@calcom/web/modules/event-types/components/CreateEventTypeDialog";
 import { DuplicateDialog } from "@calcom/web/modules/event-types/components/DuplicateDialog";
 import { InfiniteSkeletonLoader } from "@calcom/web/modules/event-types/components/SkeletonLoader";
+import { SearchIcon } from "@coss/ui/icons";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { TRPCClientError } from "@trpc/client";
 import Link from "next/link";
@@ -432,15 +432,15 @@ export const InfiniteEventTypeList = ({
       if (value) newSearchParams.set(key, value.toString());
       if (value === null) newSearchParams.delete(key);
     }
-        setParamsIfDefined("dialog", "duplicate");
-        setParamsIfDefined("title", eventType.title);
-        setParamsIfDefined("description", eventType.description);
-        setParamsIfDefined("slug", eventType.slug);
-        setParamsIfDefined("id", eventType.id);
-        setParamsIfDefined("length", eventType.length);
-        setParamsIfDefined("pageSlug", group.profile.slug);
-        setParamsIfDefined("schedulingType", eventType.schedulingType);
-        router.push(`${pathname}?${newSearchParams.toString()}`);
+    setParamsIfDefined("dialog", "duplicate");
+    setParamsIfDefined("title", eventType.title);
+    setParamsIfDefined("description", eventType.description);
+    setParamsIfDefined("slug", eventType.slug);
+    setParamsIfDefined("id", eventType.id);
+    setParamsIfDefined("length", eventType.length);
+    setParamsIfDefined("pageSlug", group.profile.slug);
+    setParamsIfDefined("schedulingType", eventType.schedulingType);
+    router.push(`${pathname}?${newSearchParams.toString()}`);
   };
 
   const deleteMutation = trpc.viewer.eventTypes.delete.useMutation({
@@ -623,6 +623,18 @@ export const InfiniteEventTypeList = ({
                             </>
                           )}
 
+                          {!isManagedEventType && (
+                            <Button
+                              className="shrink-0"
+                              color="secondary"
+                              href={calLink}
+                              size="sm"
+                              StartIcon="calendar"
+                              target="_blank">
+                              {t("schedule_meeting")}
+                            </Button>
+                          )}
+
                           <ButtonGroup combined>
                             {!isManagedEventType && (
                               <>
@@ -775,6 +787,15 @@ export const InfiniteEventTypeList = ({
                                   StartIcon="clipboard"
                                   className="w-full rounded-none text-left">
                                   {t("copy_link")}
+                                </DropdownItem>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="outline-none">
+                                <DropdownItem
+                                  href={calLink}
+                                  target="_blank"
+                                  StartIcon="calendar"
+                                  className="w-full rounded-none">
+                                  {t("schedule_meeting")}
                                 </DropdownItem>
                               </DropdownMenuItem>
                             </>
